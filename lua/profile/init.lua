@@ -70,6 +70,8 @@ local function default_options()
       statusline = true,
       tabline = true,
     },
+    bufnr = nil,
+    winid = nil,
   }
 end
 
@@ -210,36 +212,16 @@ function db:get_opts(callback)
 end
 
 function db:render(opts)
-  local config = vim.tbl_extend("force", opts.config, {
-    avatar = function()
-      return {
-        type = "avatar",
-        content = function()
-          local img = require("image")
-          opts.obj.avatar = img.from_file(opts.avatar_path, {
-            id = "avatar",
-            inline = true,
-            x = opts.avatar_opts.avatar_x,
-            y = opts.avatar_opts.avatar_y,
-            width = opts.avatar_opts.avatar_width,
-            height = opts.avatar_opts.avatar_height,
-          })
-        end,
-      }
-    end,
-    path = cache_path(),
-    bufnr = self.bufnr,
-    winid = self.winid,
-  })
-
-  require("profile.avatar")(config)
+  opts.bufnr = self.bufnr
+  opts.winid = self.winid
+  require("profile.avatar")(opts)
 
   self:set_ui_options(opts)
 
   api.nvim_create_autocmd("VimResized", {
     buffer = self.bufnr,
     callback = function()
-      require("profile.avatar")(config)
+      require("profile.avatar")(opts)
       vim.bo[self.bufnr].modifiable = false
     end,
   })
