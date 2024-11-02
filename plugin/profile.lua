@@ -2,6 +2,17 @@
 
 local g = vim.api.nvim_create_augroup("nvim-profile", { clear = true })
 
+local hightlight = {
+  ProfileRed = { fg = "#ffc0cb", bg = "NONE" },
+  ProfileBlue = { fg = "#B0E2FF", bg = "NONE" },
+  Profilegreen = { fg = "#c1Eac1", bg = "NONE" },
+  Profileyellow = { fg = "#ffe4c4", bg = "NONE" },
+}
+
+for k, v in pairs(hightlight) do
+  vim.api.nvim_set_hl(0, k, v)
+end
+
 vim.api.nvim_create_autocmd("StdinReadPre", {
   group = g,
   callback = function()
@@ -25,6 +36,6 @@ vim.api.nvim_create_autocmd("UIEnter", {
 --   end,
 -- })
 
-vim.api.nvim_create_user_command("NvimProfile", function()
+vim.api.nvim_create_user_command("Profile", function()
   require("profile"):instance()
 end, {})

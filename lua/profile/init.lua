@@ -1,10 +1,11 @@
 local api, fn = vim.api, vim.fn
 local utils = require("profile.utils")
+local comp = require("profile.components")
 local ctx = {}
-local db = {}
+local pf = {}
 
-db.__index = db
-db.__newindex = function(t, k, v)
+pf.__index = pf
+pf.__newindex = function(t, k, v)
   rawset(t, k, v)
 end
 
@@ -21,29 +22,6 @@ local function show_avatar(obj)
   end
 end
 
-local function clean_ctx()
-  for k, _ in pairs(ctx) do
-    ctx[k] = nil
-  end
-end
-
-local function cache_dir()
-  local dir = utils.path_join(vim.fn.stdpath("cache"), "profile")
-  if fn.isdirectory(dir) == 0 then
-    fn.mkdir(dir, "p")
-  end
-  return dir
-end
-
-local function cache_path()
-  local dir = cache_dir()
-  return utils.path_join(dir, "cache")
-end
-
-local function conf_cache_path()
-  return utils.path_join(cache_dir(), "conf")
-end
-
 local function plugin_path()
   local d = debug.getinfo(1).source:sub(2)
   return vim.fn.fnamemodify(d, ":h")
@@ -56,13 +34,45 @@ local function default_options()
       avatar_width = 20,
       avatar_height = 20,
       avatar_x = (vim.o.columns - 20) / 2,
-      avatar_y = 8,
+      avatar_y = 7,
     },
-    config = {
-      avatar = true,
-      contributions = true,
-      user = "Kurama622",
+    user = "Kurama622",
+    git_contributions = {
+      start_week = 1,
+      end_week = 53,
+      empty_char = "□",
+      full_char = { "■", "■", "■", "■", "■" },
     },
+    format = function()
+      comp:avatar()
+      comp:text_component_render({
+        comp:text_component("git@github.com:Kurama622/profile.nvim", "center", "ProfileRed"),
+        comp:text_component("──── By Kurama622", "right", "ProfileBlue"),
+      })
+      comp:seperator_render()
+      comp:card_component_render({
+        type = "table",
+        content = function()
+          return {
+            {
+              title = "kurama622/llm.nvim",
+              description = [[LLM Neovim Plugin: Effortless Natural
+Language Generation with LLM's API]],
+            },
+            {
+              title = "kurama622/profile.nvim",
+              description = [[A Neovim plugin: Your Personal Homepage]],
+            },
+          }
+        end,
+        hl = {
+          border = "ProfileYellow",
+          text = "ProfileYellow",
+        },
+      })
+      comp:seperator_render()
+      comp:git_contributions_render()
+    end,
     obj = {
       avatar = nil,
     },
@@ -102,18 +112,14 @@ local function buf_local()
   end
 end
 
-function db:new_file()
-  vim.cmd("enew")
-end
-
-function db:save_user_options()
+function pf:save_user_options()
   self.user_cursor_line = vim.opt.cursorline:get()
   self.user_laststatus_value = vim.opt.laststatus:get()
   self.user_tabline_value = vim.opt.showtabline:get()
   self.user_winbar_value = vim.opt.winbar:get()
 end
 
-function db:set_ui_options(opts)
+function pf:set_ui_options(opts)
   if opts.hide.statusline then
     vim.opt.laststatus = 0
   end
@@ -129,7 +135,7 @@ function db:set_ui_options(opts)
   end
 end
 
-function db:restore_user_options(opts)
+function pf:restore_user_options(opts)
   if self.user_cursor_line then
     vim.opt.cursorline = self.user_cursor_line
   end
@@ -147,91 +153,30 @@ function db:restore_user_options(opts)
   end
 end
 
-function db:cache_opts()
-  if not self.opts then
-    return
-  end
-  local uv = vim.loop
-  local path = conf_cache_path()
-  if self.opts.config.shortcut then
-    for _, item in pairs(self.opts.config.shortcut) do
-      if type(item.action) == "function" then
-        ---@diagnostic disable-next-line: param-type-mismatch
-        local dump = assert(string.dump(item.action))
-        item.action = dump
-      end
-    end
-  end
-
-  if self.opts.config.project and type(self.opts.config.project.action) == "function" then
-    ---@diagnostic disable-next-line: param-type-mismatch
-    local dump = assert(string.dump(self.opts.config.project.action))
-    self.opts.config.project.action = dump
-  end
-
-  if self.opts.config.center then
-    for _, item in pairs(self.opts.config.center) do
-      if type(item.action) == "function" then
-        ---@diagnostic disable-next-line: param-type-mismatch
-        local dump = assert(string.dump(item.action))
-        item.action = dump
-      end
-    end
-  end
-
-  if self.opts.config.footer and type(self.opts.config.footer) == "function" then
-    ---@diagnostic disable-next-line: param-type-mismatch
-    local dump = assert(string.dump(self.opts.config.footer))
-    self.opts.config.footer = dump
-  end
-
-  local dump = vim.json.encode(self.opts)
-  uv.fs_open(path, "w+", tonumber("664", 8), function(err, fd)
-    assert(not err, err)
-    ---@diagnostic disable-next-line: redefined-local
-    uv.fs_write(fd, dump, 0, function(err, _)
-      assert(not err, err)
-      uv.fs_close(fd)
-    end)
-  end)
-end
-
-function db:get_opts(callback)
-  utils.async_read(
-    conf_cache_path(),
-    vim.schedule_wrap(function(data)
-      if not data or #data == 0 then
-        return
-      end
-      local obj = vim.json.decode(data)
-      if obj then
-        callback(obj)
-      end
-    end)
-  )
-end
-
-function db:render(opts)
+function pf:render(opts)
   opts.bufnr = self.bufnr
   opts.winid = self.winid
-  require("profile.avatar")(opts)
+  require("profile.homepage")(opts)
 
   self:set_ui_options(opts)
 
   api.nvim_create_autocmd("VimResized", {
     buffer = self.bufnr,
     callback = function()
-      require("profile.avatar")(opts)
+      require("profile.homepage")(opts)
       vim.bo[self.bufnr].modifiable = false
     end,
   })
 
   api.nvim_create_autocmd("BufLeave", {
     callback = function()
-      clean_avatar(opts.obj.avatar)
+      if vim.bo.filetype == "profile" then
+        clean_avatar(opts.obj.avatar)
+      end
     end,
   })
-  api.nvim_create_autocmd("WinEnter", {
+
+  api.nvim_create_autocmd({ "BufWinEnter", "WinEnter" }, {
     callback = function()
       if api.nvim_win_get_number(0) > 1 then
         clean_avatar(opts.obj.avatar)
@@ -260,14 +205,9 @@ function db:render(opts)
 
       if #wins == 0 then
         self:restore_user_options(opts)
-        clean_avatar(opts.obj.avatar)
       end
 
-      -- clean up if there are no profile buffers at all
       if #bufs == 0 then
-        -- self:cache_opts()
-        clean_avatar(opts.obj.avatar)
-        -- clean_ctx()
         pcall(api.nvim_del_autocmd, opt.id)
       end
     end,
@@ -276,7 +216,7 @@ function db:render(opts)
 end
 
 -- create profile instance
-function db:instance()
+function pf:instance()
   local mode = api.nvim_get_mode().mode
   if mode == "i" or not vim.bo.modifiable then
     return
@@ -302,16 +242,12 @@ function db:instance()
   buf_local()
   if self.opts then
     self:render(self.opts)
-  else
-    self:get_opts(function(obj)
-      self:render(obj)
-    end)
   end
 end
 
-function db.setup(opts)
+function pf.setup(opts)
   opts = opts or {}
   ctx.opts = vim.tbl_deep_extend("force", default_options(), opts)
 end
 
-return setmetatable(ctx, db)
+return setmetatable(ctx, pf)
