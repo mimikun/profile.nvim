@@ -118,3 +118,7 @@ Complete configuration
     end,
   },
 ```
+
+## References
+
+- [dashboard-nvim](https://github.com/nvimdev/dashboard-nvim)
