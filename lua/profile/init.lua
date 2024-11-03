@@ -42,6 +42,7 @@ local function default_options()
       end_week = 53,
       empty_char = "□",
       full_char = { "■", "■", "■", "■", "■" },
+      fake_contributions = nil,
     },
     format = function()
       comp:avatar()

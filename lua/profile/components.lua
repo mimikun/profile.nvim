@@ -78,8 +78,13 @@ end
 
 local function async_get_git_contributions(opts, callback)
   vim.schedule(function()
+    local contributions = nil
+    if opts.git_contributions.fake_contributions ~= nil then
+      contributions = opts.git_contributions.fake_contributions()
+    else
+      contributions = git_contributions(opts.user)
+    end
     local contribute_map = {}
-    local contributions = git_contributions(opts.user)
     for row = 1, 7 do
       contribute_map[row] = ""
       for col = opts.git_contributions.start_week, opts.git_contributions.end_week do
