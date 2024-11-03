@@ -169,17 +169,9 @@ function pf:render(opts)
     end,
   })
 
-  api.nvim_create_autocmd("BufLeave", {
-    callback = function()
-      if vim.bo.filetype == "profile" then
-        clean_avatar(opts.obj.avatar)
-      end
-    end,
-  })
-
   api.nvim_create_autocmd({ "BufWinEnter", "WinEnter" }, {
     callback = function()
-      if api.nvim_win_get_number(0) > 1 then
+      if vim.bo.filetype ~= "profile" then
         clean_avatar(opts.obj.avatar)
       end
     end,
