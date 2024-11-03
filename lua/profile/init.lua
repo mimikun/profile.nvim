@@ -171,7 +171,8 @@ function pf:render(opts)
 
   api.nvim_create_autocmd({ "BufWinEnter", "WinEnter" }, {
     callback = function()
-      if vim.bo.filetype ~= "profile" then
+      local ft = vim.bo.filetype
+      if ft ~= "profile" and ft ~= "noice" then
         clean_avatar(opts.obj.avatar)
       end
     end,
