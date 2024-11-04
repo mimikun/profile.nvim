@@ -28,12 +28,13 @@ local function plugin_path()
 end
 
 local function default_options()
+  local win_width = vim.o.columns
   return {
     avatar_path = plugin_path() .. "/../../resources/profile.png",
     avatar_opts = {
       avatar_width = 20,
       avatar_height = 20,
-      avatar_x = (vim.o.columns - 20) / 2,
+      avatar_x = math.floor((win_width - 20) / 2),
       avatar_y = 7,
     },
     user = "Kurama622",
