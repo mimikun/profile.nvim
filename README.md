@@ -119,6 +119,9 @@ Language Generation with LLM's API]],
     end,
   },
 ```
+
+[My profile.nvim config](https://github.com/Kurama622/.lazyvim/blob/main/lua/plugins/profile.lua)
+
 ### image.nvim configuration
 ```lua
   {
