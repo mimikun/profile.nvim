@@ -1,6 +1,6 @@
 # profile.nvim
 
-Your personal profile page in Neovim.
+Your personal homepage in Neovim.
 
 ![profile1](https://github.com/user-attachments/assets/ec627c79-ebac-46f5-8728-57472836642a)
 ![profile2](https://github.com/user-attachments/assets/24f8d775-f484-47a1-a278-b011817db08b)
@@ -30,7 +30,9 @@ Your personal profile page in Neovim.
 ```
 
 
-Complete configuration
+** Complete configuration **
+
+You also can refer to my [config](https://github.com/Kurama622/.lazyvim/blob/main/lua/plugins/profile.lua).
 
 ```lua
   {
@@ -121,8 +123,6 @@ Language Generation with LLM's API]],
   },
 ```
 
-[My profile.nvim config](https://github.com/Kurama622/.lazyvim/blob/main/lua/plugins/profile.lua)
-
 ### image.nvim configuration
 
 `backend` can be `ueberzug` or `kitty`: MacOS only supports `kitty`
@@ -165,6 +165,44 @@ Language Generation with LLM's API]],
       })
     end,
   },
+```
+
+## Define User Mappings
+
+```lua
+local user_mappings = {
+  n = {
+    ["r"] = "<cmd>lua require('telescope.builtin').oldfiles()<cr>",
+    ["f"] = "<cmd>lua require('telescope.builtin').find_files()<cr>",
+    ["c"] = "<cmd>lua require('telescope.builtin').find_files({ cwd = '$HOME/.config/nvim' })<cr>",
+    ["/"] = "<cmd>lua require('telescope.builtin').live_grep()<cr>",
+    ["n"] = "<cmd>enew<cr>",
+    ["l"] = "<cmd>Lazy<cr>",
+  },
+}
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "profile",
+  callback = function()
+    for mode, mapping in pairs(user_mappings) do
+      for key, cmd in pairs(mapping) do
+        vim.api.nvim_buf_set_keymap(0, mode, key, cmd, { noremap = true, silent = true })
+      end
+    end
+  end,
+})
+```
+Refer to my [config](https://github.com/Kurama622/.lazyvim/blob/main/lua/plugins/profile.lua).
+
+
+## Some Unicode characters you might be interested in:
+
+```lua
+--[[
+full_char = { "█", "█", "█", "█", "█" },
+full_char = { "■", "■", "■", "■", "■" },
+full_char = { "▄", "▅", "▆", "▇", "█" },
+full_char = { "", "󰧞", "", "", "" },
+]]
 ```
 
 ## References
