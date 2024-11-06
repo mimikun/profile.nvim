@@ -22,6 +22,7 @@ Your personal profile page in Neovim.
   config = function()
     require("profile").setup({
       avatar_path = "<your avatar path>", -- default: profile.nvim/resources/profile.png
+      user = "<your github username>",
     })
     vim.api.nvim_set_keymap("n", "<leader>p", "<cmd>Profile<cr>", { silent = true })
   end
@@ -123,6 +124,9 @@ Language Generation with LLM's API]],
 [My profile.nvim config](https://github.com/Kurama622/.lazyvim/blob/main/lua/plugins/profile.lua)
 
 ### image.nvim configuration
+
+`backend` can be `ueberzug` or `kitty`: MacOS only supports `kitty`
+
 ```lua
   {
     "3rd/image.nvim",
