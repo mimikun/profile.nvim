@@ -30,7 +30,7 @@ Your personal homepage in Neovim.
 ```
 
 
-** Complete configuration **
+**Complete configuration**
 
 You also can refer to my [config](https://github.com/Kurama622/.lazyvim/blob/main/lua/plugins/profile.lua).
 
