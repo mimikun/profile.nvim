@@ -61,19 +61,38 @@ function comp:seperator_render(tbl)
   comp:text_component_render(tbl)
 end
 
+local function gen_git_contribute_map(opts, contributions, contribute_map)
+  for row = 1, 7 do
+    contribute_map[row] = ""
+    for col = opts.git_contributions.start_week, opts.git_contributions.end_week do
+      if contributions[tostring(col)][row] == nil then
+        contribute_map[row] = contribute_map[row] .. "  "
+      elseif contributions[tostring(col)][row] == 0 then
+        contribute_map[row] = contribute_map[row] .. opts.git_contributions.empty_char .. " "
+      else
+        local size = contributions[tostring(col)][row] > 5 and 5 or contributions[tostring(col)][row]
+        contribute_map[row] = contribute_map[row] .. opts.git_contributions.full_char[size] .. " "
+      end
+    end
+    contribute_map[row] = utils.center_align(contribute_map[row])
+  end
+end
+
 local function async_get_git_contributions(opts, callback)
-  vim.fn.jobstart(
-    string.format(
-      [[curl -s -H "Authorization: bearer $GITHUB_TOKEN" -X POST -d '{"query":"query {user(login: \"%s\") {contributionsCollection {contributionCalendar {weeks {contributionDays {contributionCount\n date}}}}}}"}' https://api.github.com/graphql | jq '.data.user.contributionsCollection.contributionCalendar.weeks.[].contributionDays' | jq '{weeks: [.[].contributionCount]}' | jq -c -s 'reduce .[] as $item ({}; . + {(length + 1 | tostring): $item.weeks})']],
-      opts.user
-    ),
-    {
-      on_stdout = function(job_id, data, event_type)
-        vim.schedule(function()
-          local contributions = nil
-          if opts.git_contributions.fake_contributions ~= nil then
-            contributions = opts.git_contributions.fake_contributions()
-          else
+  local contribute_map = {}
+  if opts.git_contributions.fake_contributions ~= nil then
+    local contributions = opts.git_contributions.fake_contributions()
+    gen_git_contribute_map(opts, contributions, contribute_map)
+    pcall(callback, contribute_map)
+  else
+    vim.fn.jobstart(
+      string.format(
+        [[curl -s -H "Authorization: bearer $GITHUB_TOKEN" -X POST -d '{"query":"query {user(login: \"%s\") {contributionsCollection {contributionCalendar {weeks {contributionDays {contributionCount\n date}}}}}}"}' https://api.github.com/graphql | jq '.data.user.contributionsCollection.contributionCalendar.weeks.[].contributionDays' | jq '{weeks: [.[].contributionCount]}' | jq -c -s 'reduce .[] as $item ({}; . + {(length + 1 | tostring): $item.weeks})']],
+        opts.user
+      ),
+      {
+        on_stdout = function(job_id, data, event_type)
+          vim.schedule(function()
             local str = ""
             for _, line in ipairs(data) do
               str = str .. line
@@ -81,28 +100,14 @@ local function async_get_git_contributions(opts, callback)
             if str == "" or str == " " or str == "\n" then
               return
             end
-            contributions = vim.json.decode(str)
-          end
-          local contribute_map = {}
-          for row = 1, 7 do
-            contribute_map[row] = ""
-            for col = opts.git_contributions.start_week, opts.git_contributions.end_week do
-              if contributions[tostring(col)][row] == nil then
-                contribute_map[row] = contribute_map[row] .. "  "
-              elseif contributions[tostring(col)][row] == 0 then
-                contribute_map[row] = contribute_map[row] .. opts.git_contributions.empty_char .. " "
-              else
-                local size = contributions[tostring(col)][row] > 5 and 5 or contributions[tostring(col)][row]
-                contribute_map[row] = contribute_map[row] .. opts.git_contributions.full_char[size] .. " "
-              end
-            end
-            contribute_map[row] = utils.center_align(contribute_map[row])
-          end
-          pcall(callback, contribute_map)
-        end)
-      end,
-    }
-  )
+            local contributions = vim.json.decode(str)
+            gen_git_contribute_map(opts, contributions, contribute_map)
+            pcall(callback, contribute_map)
+          end)
+        end,
+      }
+    )
+  end
 end
 
 function comp:git_contributions_render(hl)
