@@ -1,10 +1,11 @@
 [default.extend-words]
+enew = "enew"
+noice = "noice"
+# `seperator` should be `separator`
+seperator = "seperator"
+# `hightlight` should be `highlight`
+hightlight = "hightlight"
 
 [files]
 extend-exclude = [
-  "lua/profile/components.lua",
-  "lua/profile/init.lua",
-  "lua/profile/homepage.lua",
-  "plugin/profile.lua",
-  "README.md",
 ]
