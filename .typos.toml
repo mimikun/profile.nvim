@@ -1,0 +1,10 @@
+[default.extend-words]
+
+[files]
+extend-exclude = [
+  "lua/profile/components.lua",
+  "lua/profile/init.lua",
+  "lua/profile/homepage.lua",
+  "plugin/profile.lua",
+  "README.md",
+]
